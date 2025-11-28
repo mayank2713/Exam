@@ -109,7 +109,7 @@
                 <div class="text-left">
                     <label class="block text-gray-700 text-sm font-bold mb-2 ml-1">Upload Photos</label>
                     
-                    <div class="relative block border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-purple-400 transition-colors bg-white/50 cursor-pointer">
+                    <label class="relative block border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-purple-400 transition-colors bg-white/50 cursor-pointer">
                         <input type="file" id="photoInput" accept="image/png, image/jpeg, image/jpg, image/webp" multiple class="hidden" onchange="previewImages(event)">
                         
                         <div id="uploadPreview" class="flex flex-col items-center justify-center text-gray-400">
@@ -121,7 +121,7 @@
                             <img id="tempPreview" class="w-20 h-20 rounded-full object-cover mx-auto shadow-md mb-2" src="" alt="Preview">
                             <span id="photoCount" class="text-xs text-purple-600 font-bold bg-purple-100 px-2 py-1 rounded-full"></span>
                         </div>
-                    </div>
+                    </label>
                 </div>
 
                 <button onclick="generateWish()" class="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1 active:scale-95 text-lg mt-4">
@@ -432,5 +432,6 @@
     </script>
 </body>
 </html>
+
 
 
