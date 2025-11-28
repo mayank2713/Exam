@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>All The Best!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Pacifico&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            overflow: hidden; /* Prevent scrolling for app-like feel */
+            touch-action: none; /* Disable default touch actions */
+        }
+
+        .handwritten {
+            font-family: 'Pacifico', cursive;
+        }
+
+        /* Floating Animation Base */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .floating-icon {
+            animation: float 6s ease-in-out infinite;
+            will-change: transform;
+            transition: transform 0.1s ease-out; /* Smooth parallax */
+        }
+
+        /* Pulse Animation for Button */
+        @keyframes subtle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .btn-pulse {
+            animation: subtle-pulse 2s infinite;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        /* Glow effect for the image */
+        .glow-ring {
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.6), 0 0 30px rgba(250, 204, 21, 0.4);
+        }
+        
+        .tap-hint {
+            animation: fadeInOut 2s infinite;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.5; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center p-4">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="background-layer" class="fixed inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute top-10 left-10 text-white opacity-20 text-6xl floating-icon" data-speed="2" style="animation-delay: 0s;">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="absolute bottom-20 right-10 text-yellow-300 opacity-20 text-6xl floating-icon" data-speed="-2" style="animation-delay: 1s;">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="absolute top-1/2 left-5 text-pink-300 opacity-20 text-5xl floating-icon" data-speed="1.5" style="animation-delay: 2s;">
+            <i class="fas fa-book-open"></i>
+        </div>
+        <div class="absolute top-20 right-20 text-green-300 opacity-20 text-5xl floating-icon" data-speed="-1.5" style="animation-delay: 3s;">
+            <i class="fas fa-pencil-alt"></i>
+        </div>
+        <div class="absolute bottom-10 left-1/4 text-blue-300 opacity-20 text-6xl floating-icon" data-speed="1" style="animation-delay: 1.5s;">
+            <i class="fas fa-lightbulb"></i>
+        </div>
+    </div>
+
+    <div id="main-container" class="relative w-full max-w-md perspective-1000">
+        
+        <div id="setup-screen" class="glass-panel rounded-3xl p-8 shadow-2xl text-center transition-all duration-500 relative z-20">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Great Wishes</h1>
+            <p class="text-gray-500 mb-6 text-sm">From Jack to Gabbo.</p>
+
+            <div class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-gray-700 text-sm font-bold mb-2 ml-1"></label>
+                    <input type="text" id="nameInput" placeholder="Shruti" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all">
+                </div>
+
+                <div class="text-left">
+                    <label class="block text-gray-700 text-sm font-bold mb-2 ml-1">Upload Photo (Optional)</label>
+                    <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-purple-400 transition-colors bg-white/50 cursor-pointer" onclick="document.getElementById('photoInput').click()">
+                        <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(event)">
+                        <div id="uploadPreview" class="flex flex-col items-center justify-center text-gray-400">
+                            <i class="fas fa-cloud-upload-alt text-3xl mb-2"></i>
+                            <span class="text-xs">Shruti's Photo</span>
+                        </div>
+                        <img id="tempPreview" class="hidden w-20 h-20 rounded-full object-cover mx-auto shadow-md" src="" alt="Preview">
+                    </div>
+                </div>
+
+                <button onclick="generateWish()" class="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1 active:scale-95 text-lg mt-4">
+                    ✨ Magic Card
+                </button>
+            </div>
+        </div>
+
+        <div id="wish-screen" class="glass-panel rounded-3xl p-8 shadow-2xl text-center hidden transform scale-95 opacity-0 transition-all duration-700 relative overflow-hidden z-20 cursor-pointer select-none">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-400 rotate-45 transform"></div>
+            <div class="absolute top-2 right-2 text-white font-bold text-xl rotate-45 z-10">
+                <i class="fas fa-award"></i>
+            </div>
+
+            <div class="relative z-10 pointer-events-none"> <div class="relative inline-block mb-6 mt-4 pointer-events-auto">
+                    <div class="absolute inset-0 bg-yellow-400 rounded-full blur opacity-50 animate-pulse"></div>
+                    <img id="displayPhoto" src="https://via.placeholder.com/150?text=Student" alt="Student" class="relative w-48 h-48 rounded-full object-contain border-4 border-white shadow-xl glow-ring mx-auto bg-white">
+                    <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-md text-yellow-500">
+                        <i class="fas fa-thumbs-up text-xl"></i>
+                    </div>
+                </div>
+
+                <h2 class="handwritten text-4xl text-purple-600 mb-2 transform transition-all duration-500 cursor-default">All The Best!</h2>
+                <h3 id="displayName" class="text-2xl font-bold text-gray-800 mb-4">Student Name</h3>
+
+                <div class="bg-purple-50 rounded-xl p-4 mb-6 border border-purple-100">
+                    <p id="quoteText" class="text-gray-600 italic text-sm leading-relaxed">
+                        "Believe within yourself and you will be unstoppable. The exams are just a stepping stone to your dreams!"
+                    </p>
+                </div>
+
+                <div class="flex justify-center gap-3 pointer-events-auto">
+                    <button onclick="resetApp(event)" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 text-sm font-semibold transition z-30">
+                        <i class="fas fa-redo mr-1"></i> New
+                    </button>
+                    <button onclick="triggerCenterConfetti(event)" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded-lg text-sm font-semibold shadow-md transition btn-pulse z-30">
+                        <i class="fas fa-party-popper mr-1"></i> Celebrate
+                    </button>
+                </div>
+                
+                <p class="mt-6 text-xs text-purple-400 font-semibold tap-hint">
+                    <i class="fas fa-fingerprint mr-1"></i> Tap anywhere for magic!
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // State
+        let uploadedImage = null;
+        let isWishActive = false;
+        
+        // Quotes Database
+        const quotes = [
+            "Believe you can and you're halfway there. Good luck!",
+            "Success is the sum of small efforts, repeated day in and day out.",
+            "You have prepared well, now go show them what you know!",
+            "Stay calm, stay focused, and do your best.",
+            "Your talent and preparation will lead you to victory!",
+            "Exams are not just a test of knowledge, but a test of calmness."
+        ];
+
+        // Preview Image function
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImage = e.target.result;
+                    const preview = document.getElementById('tempPreview');
+                    const placeholder = document.getElementById('uploadPreview');
+                    
+                    preview.src = uploadedImage;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Generate the Wish Card
+        function generateWish() {
+            const nameInput = document.getElementById('nameInput').value.trim();
+            const displayName = document.getElementById('displayName');
+            const displayPhoto = document.getElementById('displayPhoto');
+            const quoteText = document.getElementById('quoteText');
+            
+            // Validation
+            const nameToUse = nameInput || "Champion";
+            displayName.innerText = nameToUse;
+
+            // Set Photo
+            if (uploadedImage) {
+                displayPhoto.src = uploadedImage;
+            } else {
+                displayPhoto.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${nameToUse}&backgroundColor=b6e3f4`;
+            }
+
+            // Random Quote
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            quoteText.innerText = `"${randomQuote}"`;
+
+            // Switch Screens
+            const setupScreen = document.getElementById('setup-screen');
+            const wishScreen = document.getElementById('wish-screen');
+
+            setupScreen.style.opacity = '0';
+            setupScreen.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                setupScreen.classList.add('hidden');
+                wishScreen.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    wishScreen.style.opacity = '1';
+                    wishScreen.style.transform = 'scale(1)';
+                    isWishActive = true;
+                    // Initial celebration
+                    createConfetti(window.innerWidth/2, window.innerHeight/2);
+                    createConfetti(window.innerWidth/2, window.innerHeight/2);
+                }, 50);
+            }, 500);
+        }
+
+        function resetApp(e) {
+            if(e) e.stopPropagation(); // Prevent card tap
+            const setupScreen = document.getElementById('setup-screen');
+            const wishScreen = document.getElementById('wish-screen');
+            
+            isWishActive = false;
+            wishScreen.style.opacity = '0';
+            wishScreen.style.transform = 'scale(0.95)';
+
+            setTimeout(() => {
+                wishScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    setupScreen.style.opacity = '1';
+                    setupScreen.style.transform = 'scale(1)';
+                    
+                    // Reset inputs
+                    document.getElementById('nameInput').value = '';
+                    uploadedImage = null;
+                    document.getElementById('tempPreview').classList.add('hidden');
+                    document.getElementById('uploadPreview').classList.remove('hidden');
+                    document.getElementById('photoInput').value = '';
+                }, 50);
+            }, 500);
+        }
+
+        /* --- Interactive Parallax & Tilt Logic --- */
+        const bgLayer = document.getElementById('background-layer');
+        const icons = bgLayer.querySelectorAll('.floating-icon');
+        const wishCard = document.getElementById('wish-screen');
+        
+        document.addEventListener('mousemove', (e) => {
+            handleMove(e.clientX, e.clientY);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        });
+
+        // Device Orientation for Parallax (Mobile)
+        window.addEventListener('deviceorientation', (e) => {
+            if (!e.gamma || !e.beta) return;
+            // Gamma is left-to-right tilt (-90 to 90), Beta is front-to-back (-180 to 180)
+            const x = (e.gamma + 90) / 180 * window.innerWidth;
+            const y = (e.beta + 180) / 360 * window.innerHeight;
+            handleMove(x, y);
+        });
+
+        function handleMove(mouseX, mouseY) {
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            // 1. Move background icons
+            icons.forEach(icon => {
+                const speed = icon.getAttribute('data-speed');
+                const x = (mouseX - centerX) * speed / 100;
+                const y = (mouseY - centerY) * speed / 100;
+                icon.style.transform = `translate(${x}px, ${y}px)`;
+            });
+
+            // 2. Tilt the Wish Card (3D effect)
+            if (isWishActive) {
+                const rotateX = ((mouseY - centerY) / centerY) * -5; // Max 5 deg tilt
+                const rotateY = ((mouseX - centerX) / centerX) * 5; 
+                wishCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            }
+        }
+
+        /* --- Interaction Logic --- */
+        // Tap on card to explode confetti
+        document.addEventListener('pointerdown', (e) => {
+            if (isWishActive) {
+                // If clicking a button, don't trigger global confetti
+                if (e.target.closest('button')) return;
+                
+                createConfetti(e.clientX, e.clientY);
+                
+                // Add a small scale bump to card
+                wishCard.style.transition = 'transform 0.1s';
+                const currentTransform = wishCard.style.transform;
+                wishCard.style.transform += ' scale(0.98)';
+                setTimeout(() => {
+                    wishCard.style.transform = currentTransform;
+                    wishCard.style.transition = 'transform 0.5s ease'; // reset transition
+                }, 100);
+            }
+        });
+
+        function triggerCenterConfetti(e) {
+            if(e) e.stopPropagation();
+            createConfetti(window.innerWidth/2, window.innerHeight/2);
+            createConfetti(window.innerWidth/2, window.innerHeight/2);
+        }
+
+        /* --- Confetti Logic --- */
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let confetti = [];
+        let animationId = null;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function createConfetti(x, y) {
+            const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#fbbf24', '#3b82f6'];
+            const originX = x || Math.random() * canvas.width;
+            const originY = y || Math.random() * canvas.height;
+            
+            // Create explosion
+            for (let i = 0; i < 40; i++) {
+                confetti.push({
+                    x: originX,
+                    y: originY,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 4,
+                    speedY: (Math.random() * 10 - 5) - 2, // Upward bias not needed for tap
+                    speedX: Math.random() * 10 - 5,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: Math.random() * 10 - 5,
+                    gravity: 0.2,
+                    drag: 0.96
+                });
+            }
+            
+            if(!animationId) updateConfetti();
+        }
+
+        function updateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            confetti.forEach((p, index) => {
+                p.speedY += p.gravity; // Gravity
+                p.speedX *= p.drag;    // Air resistance
+                p.y += p.speedY;
+                p.x += p.speedX;
+                p.rotation += p.rotationSpeed;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rotation * Math.PI) / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+
+                // Remove if out of bounds
+                if (p.y > canvas.height) {
+                    confetti.splice(index, 1);
+                }
+            });
+
+            if (confetti.length > 0) {
+                animationId = requestAnimationFrame(updateConfetti);
+            } else {
+                animationId = null;
+            }
+        }
+    </script>
+</body>
+</html>
