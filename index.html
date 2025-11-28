@@ -108,8 +108,9 @@
 
                 <div class="text-left">
                     <label class="block text-gray-700 text-sm font-bold mb-2 ml-1">Upload Photos (Select Multiple)</label>
-                    <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-purple-400 transition-colors bg-white/50 cursor-pointer" onclick="document.getElementById('photoInput').click()">
-                        <input type="file" id="photoInput" accept="image/*" multiple class="hidden" onchange="previewImages(event)">
+                    
+                    <label class="relative block border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-purple-400 transition-colors bg-white/50 cursor-pointer">
+                        <input type="file" id="photoInput" accept="image/png, image/jpeg, image/jpg, image/webp" multiple class="hidden" onchange="previewImages(event)">
                         
                         <div id="uploadPreview" class="flex flex-col items-center justify-center text-gray-400">
                             <i class="fas fa-images text-3xl mb-2"></i>
@@ -120,11 +121,11 @@
                             <img id="tempPreview" class="w-20 h-20 rounded-full object-cover mx-auto shadow-md mb-2" src="" alt="Preview">
                             <span id="photoCount" class="text-xs text-purple-600 font-bold bg-purple-100 px-2 py-1 rounded-full"></span>
                         </div>
-                    </div>
+                    </label>
                 </div>
 
                 <button onclick="generateWish()" class="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1 active:scale-95 text-lg mt-4">
-                    ✨ Press Me ✨
+                    ✨ Magic Card
                 </button>
             </div>
         </div>
@@ -138,7 +139,7 @@
             <div class="relative z-10 pointer-events-none">
                 <div class="relative inline-block mb-6 mt-4 pointer-events-auto">
                     <div class="absolute inset-0 bg-yellow-400 rounded-full blur opacity-50 animate-pulse"></div>
-                    <img id="displayPhoto" src="https://via.placeholder.com/150?text=Student" alt="Student" class="relative w-48 h-48 rounded-full object-contain border-4 border-white shadow-xl glow-ring mx-auto bg-white transition-opacity duration-300">
+                    <img id="displayPhoto" src="https://via.placeholder.com/150?text=Student" alt="Student" class="relative w-48 h-48 rounded-full object-contain border-4 border-white shadow-xl glow-ring mx-auto bg-white transition-all duration-300 ease-out">
                     <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-md text-yellow-500">
                         <i class="fas fa-thumbs-up text-xl"></i>
                     </div>
@@ -158,7 +159,7 @@
                         <i class="fas fa-redo mr-1"></i> New
                     </button>
                     <button onclick="triggerCelebrate(event)" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded-lg text-sm font-semibold shadow-md transition btn-pulse z-30">
-                        <i class="fas fa-party-popper mr-1"></i> Maigc
+                        <i class="fas fa-party-popper mr-1"></i> Celebrate
                     </button>
                 </div>
             </div>
@@ -170,7 +171,7 @@
         // State
         let uploadedImages = []; 
         let isWishActive = false;
-        let currentPhotoIndex = 0; // Tracks which photo is currently showing
+        let currentPhotoIndex = 0;
         
         // Quotes Database
         const quotes = [
@@ -192,13 +193,11 @@
             uploadedImages = []; // Reset previous uploads
             
             if (files && files.length > 0) {
-                // Process all files
                 Array.from(files).forEach((file, index) => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         uploadedImages.push(e.target.result);
                         
-                        // When the first image is loaded, show preview
                         if (uploadedImages.length === 1) {
                             const preview = document.getElementById('tempPreview');
                             const container = document.getElementById('imagePreviewContainer');
@@ -209,7 +208,6 @@
                             placeholder.classList.add('hidden');
                         }
                         
-                        // Update count text
                         document.getElementById('photoCount').innerText = `+${files.length} Photos`;
                     }
                     reader.readAsDataURL(file);
@@ -223,14 +221,13 @@
             const displayPhoto = document.getElementById('displayPhoto');
             const quoteText = document.getElementById('quoteText');
             
-            // UPDATED LOGIC: Use Input Name OR default to "Student" (Removed "Champion")
             const nameToUse = nameInput || "Student";
             displayName.innerText = nameToUse;
 
             // Set Initial Photo
             if (uploadedImages.length > 0) {
                 displayPhoto.src = uploadedImages[0];
-                currentPhotoIndex = 0; // Reset index to start
+                currentPhotoIndex = 0; 
             } else {
                 displayPhoto.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${nameToUse}&backgroundColor=b6e3f4`;
             }
@@ -339,7 +336,7 @@
             }
         });
 
-        // --- CELEBRATE LOGIC ---
+        // --- CELEBRATE LOGIC (ANIMATION FIX) ---
         function triggerCelebrate(e) {
             if(e) e.stopPropagation();
             
@@ -351,10 +348,10 @@
             const quoteElement = document.getElementById('quoteText');
             quoteElement.style.opacity = '0';
             
-            // 3. Change Photo (If user uploaded multiple)
+            // 3. Change Photo (Scale down for POP effect instead of fading out)
             const photoElement = document.getElementById('displayPhoto');
             if (uploadedImages.length > 1) {
-                photoElement.style.opacity = '0';
+                photoElement.style.transform = 'scale(0.8)';
             }
 
             setTimeout(() => {
@@ -365,16 +362,17 @@
                 // Update Photo with check for duplicates
                 if (uploadedImages.length > 1) {
                     let newIndex;
-                    // Loop until we find a different index
                     do {
                         newIndex = Math.floor(Math.random() * uploadedImages.length);
                     } while (newIndex === currentPhotoIndex);
 
                     currentPhotoIndex = newIndex;
                     photoElement.src = uploadedImages[currentPhotoIndex];
-                    photoElement.style.opacity = '1';
+                    
+                    // Pop back to full size
+                    photoElement.style.transform = 'scale(1)';
                 }
-            }, 200);
+            }, 300); // 300ms matches the transition duration
         }
 
         /* --- Confetti Logic --- */
